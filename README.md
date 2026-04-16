@@ -7,6 +7,8 @@
 我自己在找工作时，每天花几个小时手动投递数百份简历，却因为投给了大量一年前发布的僵尸岗位，回复率不到 10%。后来我基于开源项目重构了这个 V2.0 脚本，加入了**多平台大模型接入、本地简历智能提取、多城市自动轮询**等功能。只需初次配置，剩下的交给 AI 自动处理，回复率得到了肉眼可见的提升。
 
 **所以，这个工具不是要取代你，而是要武装你，让你把时间花在更有价值的面试准备上。**
+<img width="816" height="1198" alt="image" src="https://github.com/user-attachments/assets/29e9f632-e9de-4998-88a6-3b7096d15068" />
+
 
 ## 🚀 核心功能：它能帮你做什么？
 
@@ -15,12 +17,18 @@
 * 支持直接上传 **PDF、Word、TXT** 格式的简历文件。
 * 结合你配置的 AI 大模型，一键自动提炼核心技能、工作经验与个人优势。
 * **自动生成 4 条个性化打招呼语**，让你的首次沟通专业且吸睛。
+<img width="1100" height="1472" alt="image" src="https://github.com/user-attachments/assets/7d4cb1f6-4687-4ab7-8703-da9c3d1d2897" />
+<img width="1086" height="1484" alt="image" src="https://github.com/user-attachments/assets/1b864683-ba10-4084-b053-e9ff98620897" />
+<img width="1108" height="1478" alt="image" src="https://github.com/user-attachments/assets/effc6eb9-1799-4dae-b11c-45db301cbffd" />
+
+
 
 ### 2. 灵活的多模型 AI 智能回复
 当 HR 回复你的消息时，AI 会根据 HR 的问题，**结合你刚上传的简历信息**生成自然、专业的回复内容。
 * 支持自定义接入：**硅基流动、DeepSeek、火山引擎、OpenAI** 等主流大模型 API。
 * 提供一键预设功能，零门槛快速上手。
 * AI 角色提示词完全可自定义，轻松应对各种面试场景。
+<img width="956" height="1426" alt="image" src="https://github.com/user-attachments/assets/2808c372-4e58-480e-af5c-09345cef38aa" />
 
 ### 3. 自动批量投递与多城市轮询
 * 设定好职位关键词、工作地点、薪资范围，脚本自动扫描页面并逐个点击“立即沟通”。
