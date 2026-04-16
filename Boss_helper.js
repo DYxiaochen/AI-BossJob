@@ -4251,11 +4251,143 @@
           if (location.pathname.includes("/jobs")) await this.autoScrollJobList();
 
           while (state.isRunning) {
-            if (location.pathname.includes("/jobs")) await this.processJobList();
-            else if (location.pathname.includes("/chat"))
-              await this.pollAllChatWindows();
+            if (location.pathname.includes("/jobs")) {
+              await this.processJobList();
+            } else if (location.pathname.includes("/chat")) {
+              // 根据通信模式选择处理方式
+              if (settings.communicationMode === "new-only") {
+                // 仅新消息模式：使用MutationObserver监听新消息
+                await this.processNewMessagesOnly();
+              } else {
+                // 自动模式：轮询所有聊天窗口
+                await this.pollAllChatWindows();
+              }
+            }
             await this.delay(CONFIG.BASIC_INTERVAL);
           }
+        },
+
+        async processNewMessagesOnly() {
+          // 仅新消息模式：只处理最顶部（最新）的聊天窗口
+          // 这是原作者的实现方式，不轮询所有窗口，只关注最新的消息
+          const latestChatLi = await this.waitForElement(this.getLatestChatLi);
+          if (!latestChatLi) {
+            this.log("未找到聊天窗口");
+            return;
+          }
+
+          const nameEl = latestChatLi.querySelector(".name-text");
+          const companyEl = latestChatLi.querySelector(
+            ".name-box span:nth-child(2)"
+          );
+          const name = (nameEl?.textContent || "未知").trim();
+          const company = (companyEl?.textContent || "").trim();
+          const hrKey = `${name}-${company}`.toLowerCase();
+
+          // 如果当前正在监控同一个 HR，且 observer 正常，则跳过
+          if (this.currentMonitoredHR === hrKey && this.messageObserver) {
+            return;
+          }
+
+          this.currentMonitoredHR = hrKey;
+          this.resetMessageState();
+
+          if (this.messageObserver) {
+            this.messageObserver.disconnect();
+            this.messageObserver = null;
+          }
+
+          // 检查关键词过滤
+          if (
+            settings.communicationIncludeKeywords &&
+            settings.communicationIncludeKeywords.trim()
+          ) {
+            await this.simulateClick(latestChatLi.querySelector(".figure"));
+            await this.delay(CONFIG.OPERATION_INTERVAL * 2);
+
+            const positionName = this.getPositionName();
+            const includeKeywords = settings.communicationIncludeKeywords
+              .toLowerCase()
+              .split(/[,]/)
+              .map((kw) => kw.trim())
+              .filter((kw) => kw.length > 0);
+
+            const positionNameLower = positionName.toLowerCase();
+            const isMatch = includeKeywords.some((keyword) =>
+              positionNameLower.includes(keyword)
+            );
+
+            if (!isMatch) {
+              this.log(`跳过岗位，不含关键词[${includeKeywords.join(", ")}]`);
+              return;
+            }
+          }
+
+          // 点击并处理
+          if (!latestChatLi.classList.contains("last-clicked")) {
+            await this.simulateClick(latestChatLi.querySelector(".figure"));
+            latestChatLi.classList.add("last-clicked");
+
+            await this.delay(CONFIG.OPERATION_INTERVAL);
+            await HRInteractionManager.handleHRInteraction(hrKey);
+          }
+
+          // 设置消息监听
+          await this.setupMessageObserver(hrKey);
+          this.log(`正在监听新消息: ${hrKey}`);
+        },
+
+        async getCurrentHRName() {
+          // 尝试多种选择器获取HR名称
+          const selectors = [
+            '.chat-header .name-text',
+            '.chat-header .name',
+            '.chat-title .name',
+            '.chat-basic-info .name',
+            '.header-name',
+            '.user-name',
+            '.friend-name',
+            '.chat-user-name',
+            '.name-box .name-text',
+            '[class*="name"]'
+          ];
+          
+          for (const selector of selectors) {
+            const element = document.querySelector(selector);
+            if (element) {
+              const text = element.textContent.trim();
+              if (text && text.length > 0 && text !== "未知") {
+                return text;
+              }
+            }
+          }
+          return "未知";
+        },
+
+        async getCurrentHRCompany() {
+          // 尝试多种选择器获取公司名称
+          const selectors = [
+            '.chat-header .company-name',
+            '.chat-header .company',
+            '.chat-title .company',
+            '.chat-basic-info .company',
+            '.company-name',
+            '.user-company',
+            '.friend-company',
+            '.name-box span:nth-child(2)',
+            '[class*="company"]'
+          ];
+          
+          for (const selector of selectors) {
+            const element = document.querySelector(selector);
+            if (element) {
+              const text = element.textContent.trim();
+              if (text && text.length > 0) {
+                return text;
+              }
+            }
+          }
+          return "";
         },
 
         async pollAllChatWindows() {
